@@ -28,7 +28,7 @@
 
 ---
 
-## 📋 Executive Summary
+##  Executive Summary
 
 **SkyFit Data Lake** is an end-to-end data platform that consolidates data from multiple SaaS systems (CRM, Support, Gym Management) into a unified analytical layer. Built with production-grade patterns, it serves as the foundation for business intelligence dashboards and machine learning models (churn prediction, customer LTV).
 
@@ -51,7 +51,7 @@
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ### High-Level Data Flow
 
