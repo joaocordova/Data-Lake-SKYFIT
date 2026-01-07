@@ -66,7 +66,7 @@
           │                   │                   │
           ▼                   ▼                   ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-                        🥉 BRONZE LAYER (Raw/Immutable)                          
+                         BRONZE LAYER (Raw/Immutable)                          
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  Azure Data Lake Storage Gen2 (Cool Tier)                                 │  │
 │  │                                                                           │  │
@@ -86,7 +86,7 @@
           │  Watermark-based incremental extraction
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-                        🥈 SILVER LAYER (Staging/Validated)                      
+                         SILVER LAYER (Staging/Validated)                      
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  PostgreSQL 17 - stg_pipedrive.* / stg_zendesk.*                          │  │
 │  │                                                                           │  │
@@ -113,7 +113,7 @@
           │  JSONB extraction + type casting + deduplication
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-                         🥇 GOLD LAYER (Core/Analytics)                         
+                          GOLD LAYER (Core/Analytics)                         
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  PostgreSQL 17 - core.*                                                   │  │
 │  │                                                                           │  │
@@ -139,7 +139,7 @@
           │
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              📊 CONSUMPTION LAYER                               │
+│                               CONSUMPTION LAYER                                 │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
 │  │   Power BI   │  │   Jupyter    │  │   Python     │  │   ML Pipeline        │ │
 │  │  Dashboards  │  │  Notebooks   │  │   Scripts    │  │  (Churn/LTV)         │ │
@@ -162,7 +162,7 @@
 
 ---
 
-## 🎯 Key Decisions (ADRs)
+##  Key Decisions (ADRs)
 
 ### ADR-001: PostgreSQL over Dedicated Data Warehouse
 
@@ -262,7 +262,7 @@ bronze/pipedrive/scope=comercial/entity=deals/
 
 ---
 
-## 📊 Data Model
+##  Data Model
 
 ### Entity Relationship Diagram
 
@@ -371,7 +371,7 @@ bronze/pipedrive/scope=comercial/entity=deals/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -438,7 +438,7 @@ python src/transformers/normalize_zendesk.py
 
 ---
 
-## ⚙️ Operations
+##  Operations
 
 ### Pipeline Commands
 
@@ -556,7 +556,7 @@ skyfit-datalake/
 
 ---
 
-## 🗺️ Roadmap & Scaling Strategy
+##  Roadmap & Scaling Strategy
 
 ### Current State (v1.0)
 
@@ -572,7 +572,7 @@ skyfit-datalake/
 ### Phase 2: EVO Integration (Q1 2026)
 
 ```
-🔄 EVO Gym Management API integration
+ EVO Gym Management API integration
    - ~600k prospects (high volume)
    - Rate limit handling (40 req/min)
    - Incremental by modification date
@@ -581,7 +581,7 @@ skyfit-datalake/
 ### Phase 3: ML Feature Store (Q2 2026)
 
 ```
-📊 Feature engineering layer
+ Feature engineering layer
    - Churn prediction features
    - Customer LTV calculation
    - Activity aggregations
@@ -609,7 +609,7 @@ Local execution     ────────►    Kubernetes / Azure Container 
 
 ---
 
-## 🔒 Data Quality & Governance
+## Data Quality & Governance
 
 ### Built-in Safeguards
 
@@ -639,7 +639,7 @@ WHERE d.person_id IS NOT NULL AND p.person_id IS NULL;
 
 ---
 
-## 👤 Author
+##  Author
 
 **João V. Cordova** - *Senior Data Engineer*
 
@@ -648,7 +648,7 @@ WHERE d.person_id IS NOT NULL AND p.person_id IS NULL;
 
 ---
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
