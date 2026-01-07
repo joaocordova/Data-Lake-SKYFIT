@@ -117,7 +117,7 @@ SkyFit is a fitness academy chain that needs to:
 | **Orchestration** | Windows Task Scheduler | Simple, reliable for single-node deployment |
 | **BI** | Power BI | Enterprise standard, DirectQuery to PostgreSQL |
 
->  For detailed architecture decisions, see [Architecture Decision Records](docs/architecture/decisions/)](https://github.com/joaocordova/Data-Lake-SKYFIT/blob/main/Architecture%20Decision%20Records)
+>  For detailed architecture decisions, see [Architecture Decision Records]
 
 ---
 
