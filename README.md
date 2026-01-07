@@ -641,7 +641,7 @@ WHERE d.person_id IS NOT NULL AND p.person_id IS NULL;
 
 ##  Author
 
-**João V. Cordova** - *Senior Data Engineer*
+**João V. Cordova** 
 
 -  GitHub: [@joaocordova](https://github.com/joaocordova)
 -  LinkedIn: [João Cordova](https://linkedin.com/in/joaocordova)
