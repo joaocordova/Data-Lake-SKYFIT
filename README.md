@@ -27,7 +27,7 @@
 
 ---
 
-## 📋 Overview
+## Overview
 
 **SkyFit Data Lake** is a production-grade data platform that integrates multiple SaaS data sources (CRM, Support, Gym Management) into a unified analytical layer. Built following the **Medallion Architecture** pattern, it provides a scalable foundation for business intelligence and machine learning workloads.
 
