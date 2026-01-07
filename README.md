@@ -60,7 +60,7 @@ SkyFit is a fitness academy chain that needs to:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES                                    │
+│                              DATA SOURCES                                   │
 ├─────────────┬─────────────┬─────────────┬───────────────────────────────────┤
 │  Pipedrive  │   Zendesk   │     EVO     │           Future Sources          │
 │    (CRM)    │  (Support)  │    (Gym)    │                                   │
@@ -68,7 +68,7 @@ SkyFit is a fitness academy chain that needs to:
        │             │             │
        ▼             ▼             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BRONZE LAYER (Raw)                                   │
+│                         BRONZE LAYER (Raw)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  Azure Data Lake Storage Gen2 (Cool Tier)                           │    │
 │  │  Format: .jsonl.gz | Partitioned by: source/scope/entity/date/run   │    │
@@ -78,7 +78,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         SILVER LAYER (Staging)                               │
+│                         SILVER LAYER (Staging)                              │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  PostgreSQL Flexible Server - stg_* schemas                         │    │
 │  │  Format: JSONB with full lineage (blob_path, line_no, run_id)       │    │
@@ -88,7 +88,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          GOLD LAYER (Core)                                   │
+│                          GOLD LAYER (Core)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  PostgreSQL Flexible Server - core schema                           │    │
 │  │  Format: Normalized star schema with proper data types              │    │
@@ -98,7 +98,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CONSUMPTION                                        │
+│                           CONSUMPTION                                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
 │  │   Power BI   │  │   Python     │  │   Jupyter    │  │   REST API   │     │
 │  │  Dashboards  │  │   ML/AI      │  │  Notebooks   │  │   (Future)   │     │
