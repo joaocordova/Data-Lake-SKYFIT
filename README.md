@@ -57,7 +57,7 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES (SaaS APIs)                            │
+│                              DATA SOURCES (SaaS APIs)                           │
 ├───────────────────┬───────────────────┬───────────────────┬─────────────────────┤
 │     Pipedrive     │      Zendesk      │        EVO        │   Future Sources    │
 │   (CRM - 2 BUs)   │    (Support)      │  (Gym Mgmt)       │                     │
@@ -66,7 +66,7 @@
           │                   │                   │
           ▼                   ▼                   ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        🥉 BRONZE LAYER (Raw/Immutable)                           │
+                        🥉 BRONZE LAYER (Raw/Immutable)                          
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  Azure Data Lake Storage Gen2 (Cool Tier)                                 │  │
 │  │                                                                           │  │
@@ -86,7 +86,7 @@
           │  Watermark-based incremental extraction
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                        🥈 SILVER LAYER (Staging/Validated)                       │
+                        🥈 SILVER LAYER (Staging/Validated)                      
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  PostgreSQL 17 - stg_pipedrive.* / stg_zendesk.*                          │  │
 │  │                                                                           │  │
@@ -113,7 +113,7 @@
           │  JSONB extraction + type casting + deduplication
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                         🥇 GOLD LAYER (Core/Analytics)                           │
+                         🥇 GOLD LAYER (Core/Analytics)                         
 │  ┌───────────────────────────────────────────────────────────────────────────┐  │
 │  │  PostgreSQL 17 - core.*                                                   │  │
 │  │                                                                           │  │
@@ -139,7 +139,7 @@
           │
           ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              📊 CONSUMPTION LAYER                                │
+│                              📊 CONSUMPTION LAYER                               │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐ │
 │  │   Power BI   │  │   Jupyter    │  │   Python     │  │   ML Pipeline        │ │
 │  │  Dashboards  │  │  Notebooks   │  │   Scripts    │  │  (Churn/LTV)         │ │
@@ -268,8 +268,8 @@ bronze/pipedrive/scope=comercial/entity=deals/
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              PIPEDRIVE (CRM)                                     │
-│                                                                                  │
+│                              PIPEDRIVE (CRM)                                    │
+│                                                                                 │
 │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                     │
 │  │ pd_pipelines │────<│  pd_stages   │     │   pd_users   │                     │
 │  │──────────────│     │──────────────│     │──────────────│                     │
@@ -280,37 +280,37 @@ bronze/pipedrive/scope=comercial/entity=deals/
 │                       │ scope        │     └──────┬───────┘                     │
 │                       └──────┬───────┘            │                             │
 │                              │                    │                             │
-│  ┌──────────────┐           │                    │        ┌──────────────┐     │
-│  │pd_organizat° │           │                    │        │ pd_activities│     │
-│  │──────────────│           │                    │        │──────────────│     │
-│  │ org_id       │           │                    │        │ activity_id  │     │
-│  │ name         │◄──────────┼────────────────────┼───────►│ deal_id      │     │
-│  │ scope        │           │                    │        │ person_id    │     │
-│  └──────┬───────┘           │                    │        │ user_id      │     │
-│         │                   │                    │        │ type         │     │
-│         │                   ▼                    ▼        │ done         │     │
-│         │           ┌─────────────────────────────────┐   │ scope        │     │
-│         │           │          pd_deals (FACT)        │   └──────────────┘     │
-│         │           │─────────────────────────────────│                        │
+│  ┌──────────────┐            │                    │        ┌──────────────┐     │
+│  │pd_organizat° │            │                    │        │ pd_activities│     │
+│  │──────────────│            │                    │        │──────────────│     │
+│  │ org_id       │            │                    │        │ activity_id  │     │
+│  │ name         │◄───────────┼────────────────────┼───────►│ deal_id      │     │
+│  │ scope        │            │                    │        │ person_id    │     │
+│  └──────┬───────┘            │                    │        │ user_id      │     │
+│         │                    │                    │        │ type         │     │
+│         │                    ▼                    ▼        │ done         │     │
+│         │           ┌─────────────────────────────────┐    │ scope        │     │
+│         │           │          pd_deals (FACT)        │    └──────────────┘     │
+│         │           │─────────────────────────────────│                         │
 │         └──────────►│ deal_id (PK)                    │◄───────────────────────┘│
-│                     │ scope (PK)                      │                        │
-│  ┌──────────────┐   │ person_id (FK)                  │                        │
-│  │  pd_persons  │   │ org_id (FK)                     │                        │
-│  │──────────────│   │ user_id (FK) -- owner           │                        │
-│  │ person_id    │──►│ pipeline_id (FK)                │                        │
-│  │ name         │   │ stage_id (FK)                   │                        │
-│  │ email        │   │ title, value, currency          │                        │
-│  │ phone        │   │ status (open/won/lost)          │                        │
-│  │ org_id       │   │ won_time, lost_time, close_time │                        │
-│  │ scope        │   │ expected_close_date             │                        │
-│  └──────────────┘   │ add_time, update_time           │                        │
-│                     │ _loaded_at, _updated_at         │                        │
-│                     └─────────────────────────────────┘                        │
+│                     │ scope (PK)                      │                         │
+│  ┌──────────────┐   │ person_id (FK)                  │                         │
+│  │  pd_persons  │   │ org_id (FK)                     │                         │
+│  │──────────────│   │ user_id (FK) -- owner           │                         │
+│  │ person_id    │──►│ pipeline_id (FK)                │                         │
+│  │ name         │   │ stage_id (FK)                   │                         │
+│  │ email        │   │ title, value, currency          │                         │
+│  │ phone        │   │ status (open/won/lost)          │                         │
+│  │ org_id       │   │ won_time, lost_time, close_time │                         │
+│  │ scope        │   │ expected_close_date             │                         │
+│  └──────────────┘   │ add_time, update_time           │                         │
+│                     │ _loaded_at, _updated_at         │                         │
+│                     └─────────────────────────────────┘                         │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
-│                              ZENDESK (Support)                                   │
-│                                                                                  │
+│                              ZENDESK (Support)                                  │
+│                                                                                 │
 │  ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                     │
 │  │zd_organizat° │     │  zd_groups   │     │zd_ticket_flds│                     │
 │  │──────────────│     │──────────────│     │──────────────│                     │
@@ -320,39 +320,39 @@ bronze/pipedrive/scope=comercial/entity=deals/
 │  └──────┬───────┘     └──────┬───────┘     └──────┬───────┘                     │
 │         │                    │                    │                             │
 │         │                    │                    │                             │
-│         │           ┌────────┴────────┐          │                             │
-│         │           │    zd_users     │          │                             │
-│         │           │─────────────────│          │                             │
-│         └──────────►│ user_id         │          │                             │
-│                     │ name, email     │          │                             │
-│                     │ role            │          │                             │
-│                     │ organization_id │          │                             │
-│                     └────────┬────────┘          │                             │
-│                              │                   │                             │
-│                              ▼                   ▼                             │
-│                     ┌─────────────────────────────────┐                        │
-│                     │       zd_tickets (FACT)         │                        │
-│                     │─────────────────────────────────│                        │
-│                     │ ticket_id (PK)                  │                        │
-│                     │ requester_id (FK → users)       │                        │
-│                     │ assignee_id (FK → users)        │                        │
-│                     │ group_id (FK)                   │                        │
-│                     │ organization_id (FK)            │                        │
-│                     │ subject, description            │                        │
-│                     │ status, priority                │◄──┐                    │
-│                     │ channel (via_channel)           │   │                    │
-│                     │ created_at, updated_at          │   │                    │
-│                     │ solved_at, first_reply_at       │   │                    │
-│                     │ _loaded_at, _updated_at         │   │                    │
-│                     └──────────────┬──────────────────┘   │                    │
-│                                    │                      │                    │
-│                     ┌──────────────┴───────┐    ┌────────┴───────┐            │
-│                     │   zd_ticket_tags     │    │zd_ticket_custom│            │
-│                     │──────────────────────│    │────────────────│            │
-│                     │ ticket_id (PK,FK)    │    │ ticket_id (FK) │            │
-│                     │ tag (PK)             │    │ field_id (FK)  │            │
-│                     └──────────────────────┘    │ value          │            │
-│                                                 └────────────────┘            │
+│         │           ┌────────┴────────┐           │                             │
+│         │           │    zd_users     │           │                             │
+│         │           │─────────────────│           │                             │
+│         └──────────►│ user_id         │           │                             │
+│                     │ name, email     │           │                             │
+│                     │ role            │           │                             │
+│                     │ organization_id │           │                             │
+│                     └────────┬────────┘           │                             │
+│                              │                    │                             │
+│                              ▼                    ▼                             │
+│                     ┌─────────────────────────────────┐                         │
+│                     │       zd_tickets (FACT)         │                         │
+│                     │─────────────────────────────────│                         │
+│                     │ ticket_id (PK)                  │                         │
+│                     │ requester_id (FK → users)       │                         │
+│                     │ assignee_id (FK → users)        │                         │
+│                     │ group_id (FK)                   │                         │
+│                     │ organization_id (FK)            │                         │
+│                     │ subject, description            │                         │
+│                     │ status, priority                │◄──┐                     │
+│                     │ channel (via_channel)           │   │                     │
+│                     │ created_at, updated_at          │   │                     │
+│                     │ solved_at, first_reply_at       │   │                     │
+│                     │ _loaded_at, _updated_at         │   │                     │
+│                     └──────────────┬──────────────────┘   │                     │
+│                                    │                      │                     │
+│                     ┌──────────────┴───────┐    ┌────────┴───────┐              │
+│                     │   zd_ticket_tags     │    │zd_ticket_custom│              │
+│                     │──────────────────────│    │────────────────│              │
+│                     │ ticket_id (PK,FK)    │    │ ticket_id (FK) │              │
+│                     │ tag (PK)             │    │ field_id (FK)  │              │
+│                     └──────────────────────┘    │ value          │              │
+│                                                 └────────────────┘              │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
