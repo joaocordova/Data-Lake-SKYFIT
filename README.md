@@ -271,7 +271,7 @@ skyfit-datalake/
 
 ---
 
-## 🧪 Testing
+##  Testing
 
 ```bash
 # Run all tests
@@ -286,7 +286,7 @@ pytest tests/test_extractors.py -v
 
 ---
 
-## 📊 Monitoring & Observability
+##  Monitoring & Observability
 
 ### Logs
 
