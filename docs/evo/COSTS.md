@@ -1,6 +1,6 @@
 # Análise de Custos e Arquitetura - Skyfit Data Lake
 
-## 📊 Volume de Dados Estimado
+##  Volume de Dados Estimado
 
 | Entidade | Registros | Tamanho Bronze | Tamanho STG | Tamanho CORE |
 |----------|-----------|----------------|-------------|--------------|
@@ -12,7 +12,7 @@
 
 ---
 
-## 💰 Custos Estimados Azure (Mensal)
+##  Custos Estimados Azure (Mensal)
 
 ### 1. Azure Data Lake Storage (ADLS Gen2)
 
@@ -51,9 +51,9 @@ Configuração atual (visible no screenshot):
 
 ---
 
-## 🤔 PostgreSQL para 145M registros - Faz sentido?
+##  PostgreSQL para 145M registros - Faz sentido?
 
-### ✅ PRÓS
+###  PRÓS
 
 1. **Performance OK com particionamento**
    - Entries particionado por ano (7 partições)
@@ -72,7 +72,7 @@ Configuração atual (visible no screenshot):
    - Últimas vendas de 1 cliente
    - Dados de 1 contrato
 
-### ⚠️ LIMITAÇÕES
+###  LIMITAÇÕES
 
 1. **Queries analíticas pesadas**
    - Aggregations em 110M entries = lento (30s+)
@@ -88,19 +88,19 @@ Configuração atual (visible no screenshot):
 
 ---
 
-## 🎯 Recomendações por Cenário
+##  Recomendações por Cenário
 
 ### Cenário 1: Manter PostgreSQL (Custo: $85/mês)
 **Quando usar**: Consultas pontuais, relatórios simples, MVP
 
 ```
-✅ Recomendado se:
+ Recomendado se:
 - Queries são principalmente por membro/venda específica
 - Relatórios pré-agregados são suficientes
 - Budget é limitado
 - Equipe pequena
 
-⚠️ Mitigações necessárias:
+ Mitigações necessárias:
 - Criar views materializadas para métricas comuns
 - Índices otimizados
 - Particionar tabelas grandes
@@ -125,7 +125,7 @@ Configuração:
 **Quando usar**: Analytics pesados, ML, BI avançado
 
 ```
-✅ Vantagens:
+ Vantagens:
 - Melhor performance para big data
 - Escala horizontal
 - Integração com Power BI
@@ -138,7 +138,7 @@ Bronze (ADLS) → PostgreSQL (CORE/Operacional)
 
 ---
 
-## 📈 Recomendação Final
+##  Recomendação Final
 
 ### Para o momento atual:
 
@@ -177,7 +177,7 @@ WHERE entry_date >= CURRENT_DATE - INTERVAL '30 days'
 
 ---
 
-## 🔄 Gatilhos para Mudar de Arquitetura
+##  Gatilhos para Mudar de Arquitetura
 
 Considerar Cenário 2 ou 3 quando:
 
@@ -189,7 +189,7 @@ Considerar Cenário 2 ou 3 quando:
 
 ---
 
-## 📋 Resumo de Custos
+##  Resumo de Custos
 
 | Cenário | Custo/mês | Complexidade | Quando usar |
 |---------|-----------|--------------|-------------|
