@@ -229,7 +229,7 @@ python src/evo/transformers/normalize_evo_members_v2.py --full-refresh
 
 ---
 
-## 📖 Documentation
+##  Documentation
 
 | Document | Description |
 |----------|-------------|
@@ -242,7 +242,7 @@ python src/evo/transformers/normalize_evo_members_v2.py --full-refresh
 
 ---
 
-## 🗄️ Core Data Model (EVO)
+##  Core Data Model (EVO)
 
 ### Entity Relationship Diagram
 
