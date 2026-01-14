@@ -20,7 +20,7 @@
 
 ---
 
-## 📊 Overview
+##  Overview
 
 **SkyFit Data Lake** is a production-grade data platform that integrates multiple SaaS data sources (CRM, Support, Gym Management) into a unified analytical layer. Built following the **Medallion Architecture** pattern (Bronze → Silver → Gold), it provides a scalable foundation for business intelligence and machine learning workloads.
 
@@ -34,7 +34,7 @@ SkyFit is a fitness academy chain that needs to:
 
 ---
 
-## 📈 Data Sources & Volumes
+##  Data Sources & Volumes
 
 | Source | Entities | Records | Status |
 |--------|----------|---------|--------|
@@ -53,11 +53,11 @@ SkyFit is a fitness academy chain that needs to:
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES                                    │
+│                              DATA SOURCES                                   │
 ├──────────────┬──────────────┬──────────────┬────────────────────────────────┤
 │   EVO (W12)  │   Pipedrive  │    Zendesk   │        Future Sources          │
 │  Gym Mgmt    │     CRM      │   Support    │                                │
@@ -65,7 +65,7 @@ SkyFit is a fitness academy chain that needs to:
        │              │              │
        ▼              ▼              ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BRONZE LAYER (Raw)                                   │
+│                         BRONZE LAYER (Raw)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  Azure Data Lake Storage Gen2                                       │    │
 │  │  Format: JSONL.GZ compressed | Partitioned by: entity/date/run_id   │    │
@@ -75,7 +75,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         SILVER LAYER (STG)                                   │
+│                         SILVER LAYER (STG)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  PostgreSQL Flexible Server - stg_* schemas                         │    │
 │  │  Format: JSONB raw_data with full lineage (source, run_id, line)    │    │
@@ -85,7 +85,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          GOLD LAYER (CORE)                                   │
+│                          GOLD LAYER (CORE)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  PostgreSQL Flexible Server - core schema                           │    │
 │  │  Format: Normalized star schema with proper data types              │    │
@@ -95,7 +95,7 @@ SkyFit is a fitness academy chain that needs to:
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CONSUMPTION                                        │
+│                           CONSUMPTION                                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
 │  │   Power BI   │  │   Python     │  │    SQL       │  │   REST API   │     │
 │  │  Dashboards  │  │   ML/AI      │  │  Analytics   │  │   (Future)   │     │
@@ -116,7 +116,7 @@ SkyFit is a fitness academy chain that needs to:
 
 ---
 
-## ⚡ Performance Optimizations (v2)
+##  Performance Optimizations (v2)
 
 The EVO pipeline includes optimized v2 scripts with significant performance improvements:
 
@@ -138,7 +138,7 @@ The EVO pipeline includes optimized v2 scripts with significant performance impr
 
 ---
 
-## 💰 Infrastructure Costs
+##  Infrastructure Costs
 
 | Resource | Configuration | Monthly Cost |
 |----------|---------------|--------------|
@@ -192,7 +192,7 @@ skyfit-datalake/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -261,11 +261,11 @@ python src/evo/transformers/normalize_evo_members_v2.py --full-refresh
          │                    ┌───────────┼───────────┐
          │                    │           │           │
          │                    ▼           ▼           ▼
-         │           ┌──────────────┐ ┌────────┐ ┌────────────────────┐
-         │           │evo_member_   │ │evo_    │ │evo_member_         │
-         │           │memberships   │ │entries │ │contacts            │
-         │           │(contratos)   │ │(acessos)│ │(telefones/emails) │
-         │           └──────┬───────┘ └────────┘ └────────────────────┘
+         │           ┌──────────────┐ ┌─────────┐ ┌────────────────────┐
+         │           │evo_member_   │ │evo_     │ │evo_member_         │
+         │           │memberships   │ │entries  │ │contacts            │
+         │           │(contratos)   │ │(acessos)│ │(telefones/emails)  │
+         │           └──────┬───────┘ └─────────┘ └────────────────────┘
          │                  │
          │                  │ N:1
          │                  ▼
@@ -295,7 +295,7 @@ python src/evo/transformers/normalize_evo_members_v2.py --full-refresh
 
 ---
 
-## 🔧 Operations
+##  Operations
 
 ### Storage Optimization
 
@@ -314,9 +314,9 @@ python sql/schemas/evo/optimize_storage.py --vacuum --reindex
 
 ---
 
-## 📋 Changelog
+##  Changelog
 
-### 2026-01-14 - EVO Pipeline v9
+### 2026-01-14 - EVO Pipeline 
 - ✅ **EVO Integration Complete**: Members, Sales, Entries, Prospects (~130M records)
 - ✅ **Performance Optimized**: Scripts v2 with ThreadedConnectionPool (3-6x speedup)
 - ✅ **Full-Refresh Mode**: TRUNCATE + INSERT without indexes (5-10x faster)
