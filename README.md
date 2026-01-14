@@ -8,7 +8,7 @@
 
 ---
 
-## 📊 Overview
+##  Overview
 
 **SkyFit Data Lake** is a production-grade data platform that integrates multiple SaaS data sources into a unified analytical layer. Built following the **Medallion Architecture** pattern (Bronze → Silver → Gold), it provides a scalable foundation for business intelligence and machine learning workloads.
 
@@ -31,11 +31,11 @@
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                              DATA SOURCES                                    │
+│                              DATA SOURCES                                   │
 ├─────────────┬─────────────┬─────────────┬───────────────────────────────────┤
 │  Pipedrive  │   Zendesk   │   EVO (W12) │         Future Sources            │
 │    (CRM)    │  (Support)  │    (Gym)    │                                   │
@@ -43,7 +43,7 @@
        │             │             │
        ▼             ▼             ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         BRONZE LAYER (Raw)                                   │
+│                         BRONZE LAYER (Raw)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  Azure Data Lake Storage Gen2                                       │    │
 │  │  Format: JSONL.GZ compressed                                        │    │
@@ -54,7 +54,7 @@
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                         SILVER LAYER (STG)                                   │
+│                         SILVER LAYER (STG)                                  │
 │  ┌─────────────────────────────────────────────────────────────────────┐    │
 │  │  PostgreSQL Flexible Server - stg_* schemas                         │    │
 │  │  Format: JSONB raw_data with full lineage                           │    │
@@ -74,7 +74,7 @@
        │
        ▼
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           CONSUMPTION                                        │
+│                           CONSUMPTION                                       │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐     │
 │  │   Power BI   │  │   Python     │  │    SQL       │  │   REST API   │     │
 │  │  Dashboards  │  │   ML/AI      │  │  Analytics   │  │   (Future)   │     │
@@ -94,7 +94,7 @@
 
 ---
 
-## ⚡ Performance Optimizations
+##  Performance Optimizations
 
 ### Scripts v2 - Key Improvements
 
@@ -126,7 +126,7 @@
 
 ---
 
-## 💰 Cost Analysis & Trade-offs
+##  Cost Analysis & Trade-offs
 
 ### Infrastructure Costs (Monthly)
 
@@ -218,7 +218,7 @@ skyfit-datalake/
 
 ---
 
-## 🗄️ EVO Data Model
+##  EVO Data Model
 
 ### CORE Layer Tables
 
@@ -271,7 +271,7 @@ skyfit-datalake/
 
 ---
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Prerequisites
 
@@ -320,7 +320,7 @@ python src/transformers/normalize_evo_members_v2.py --full-refresh
 
 ---
 
-## 🔧 Operations
+##  Operations
 
 ### Storage Optimization
 
@@ -363,7 +363,7 @@ Output shows extracted periods and command to continue interrupted extraction.
 
 ---
 
-## 📈 Monitoring
+##  Monitoring
 
 ### Key Queries
 
@@ -394,7 +394,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 ---
 
-## 🛠️ Troubleshooting
+##  Troubleshooting
 
 | Error | Cause | Solution |
 |-------|-------|----------|
@@ -405,7 +405,7 @@ ORDER BY pg_relation_size(indexrelid) DESC;
 
 ---
 
-## 📋 Changelog
+##  Changelog
 
 ### v9 (2026-01-14)
 - ✅ Added `code_totalpass` to Members
