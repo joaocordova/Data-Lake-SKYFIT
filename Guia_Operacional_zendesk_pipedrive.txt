@@ -1,0 +1,352 @@
+# ============================================================================
+# SKYFIT DATA LAKE - GUIA OPERACIONAL
+# ============================================================================
+# Este documento contém a ordem correta dos passos, como configurar o 
+# agendador e checks de validação de integridade.
+# ============================================================================
+
+# ============================================================================
+# 1. ARQUITETURA DO PIPELINE
+# ============================================================================
+#
+# BRONZE (ADLS)     →     SILVER (PostgreSQL STG)     →     GOLD (PostgreSQL CORE)
+# .jsonl.gz files         JSONB tables                      Typed tables
+#
+# Os dados passam por 3 camadas:
+# 1. Bronze: Extração da API → arquivos comprimidos no Data Lake
+# 2. Silver (STG): Carrega JSONB no PostgreSQL com rastreabilidade
+# 3. Gold (CORE): Normaliza para tabelas tipadas para análise/ML
+#
+# ============================================================================
+
+# ============================================================================
+# 2. ORDEM CORRETA DOS PASSOS (EXECUÇÃO MANUAL)
+# ============================================================================
+
+# PASSO 1: BRONZE - Extração das APIs
+# ------------------------------------
+# Pipedrive (comercial + expansao)
+python src/extractors/pipedrive_bronze.py
+
+# Zendesk  
+python src/extractors/zendesk_bronze.py
+
+# PASSO 2: SILVER (STG) - Carregar para PostgreSQL
+# -------------------------------------------------
+# Pipedrive (usa run mais recente automaticamente)
+python src/loaders/load_pipedrive_stg.py
+
+# Zendesk
+python src/loaders/load_zendesk_stg.py
+
+# PASSO 3: GOLD (CORE) - Normalizar para tabelas tipadas
+# -------------------------------------------------------
+# Pipedrive
+python src/transformers/normalize_pipedrive.py
+
+# Zendesk
+python src/transformers/normalize_zendesk.py
+
+
+# ============================================================================
+# 3. COMPORTAMENTO INCREMENTAL - RESPOSTA À SUA PERGUNTA
+# ============================================================================
+#
+# PERGUNTA: "Se eu não executar o extract hoje e executar amanhã, ele vai 
+#            coletar referente aos dois dias e dar carga no banco considerando 
+#            as chaves e não duplicar deals/tickets?"
+#
+# RESPOSTA: SIM! O sistema é idempotente e funciona assim:
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ CAMADA BRONZE (Extract)                                                  │
+# │ • Watermark é salvo em ADLS: _meta/{source}/watermarks/...               │
+# │ • Pipedrive: usa updated_since = último watermark (com 5min overlap)     │
+# │ • Zendesk: usa cursor/start_time do último watermark                     │
+# │ • Se você pular 2 dias, a próxima execução captura TUDO desde o último   │
+# │   watermark, independente de quanto tempo passou                         │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ CAMADA SILVER (STG - Load)                                               │
+# │ • Constraint UNIQUE em (source_blob_path, source_line_no) para PD        │
+# │ • Constraint UNIQUE em (scope, source_blob_path, source_line_no) para ZD │
+# │ • INSERT ... ON CONFLICT DO UPDATE: se já existe, atualiza               │
+# │ • Resultado: mesmo registro nunca duplica, apenas atualiza               │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# ┌─────────────────────────────────────────────────────────────────────────┐
+# │ CAMADA GOLD (CORE - Transform)                                           │
+# │ • Constraint UNIQUE em (deal_id, scope) / (ticket_id) / etc.             │
+# │ • INSERT ... ON CONFLICT DO UPDATE: UPSERT por chave de negócio          │
+# │ • Query usa ROW_NUMBER() para pegar versão mais recente do STG           │
+# │ • Resultado: tabela CORE sempre tem versão mais atual sem duplicatas     │
+# └─────────────────────────────────────────────────────────────────────────┘
+#
+# FLUXO DE EXEMPLO:
+# -----------------
+# Dia 1: Deal 123 criado, extraído, loaded, normalizado
+# Dia 2: Você não executou o pipeline
+# Dia 3: Deal 123 foi atualizado + Deal 456 criado
+#        → Bronze extrai desde Dia 1 (watermark)
+#        → STG faz UPSERT: Deal 123 atualizado, Deal 456 inserido
+#        → CORE faz UPSERT: mesma coisa
+#        → Resultado: Tabelas com dados corretos, sem duplicatas
+#
+# ============================================================================
+
+# ============================================================================
+# 4. SCRIPTS DE VALIDAÇÃO DE INTEGRIDADE
+# ============================================================================
+
+-- ============================================================================
+-- VALIDATION_CHECKS.sql - Execute no PostgreSQL após cada pipeline
+-- ============================================================================
+
+-- CHECK 1: Contagem por camada (deve ser consistente)
+-- ----------------------------------------------------
+SELECT 'STG' as layer, 'deals' as entity, COUNT(*) as count FROM stg_pipedrive.deals_raw
+UNION ALL
+SELECT 'CORE', 'deals', COUNT(*) FROM core.pd_deals
+UNION ALL
+SELECT 'STG', 'tickets', COUNT(*) FROM stg_zendesk.tickets_raw
+UNION ALL
+SELECT 'CORE', 'tickets', COUNT(*) FROM core.zd_tickets
+ORDER BY entity, layer;
+
+-- CHECK 2: Verificar IDs únicos (não deve ter duplicatas)
+-- --------------------------------------------------------
+SELECT 'pd_deals duplicates' as check_name, 
+       COUNT(*) - COUNT(DISTINCT (deal_id, scope)) as duplicates
+FROM core.pd_deals
+UNION ALL
+SELECT 'zd_tickets duplicates',
+       COUNT(*) - COUNT(DISTINCT ticket_id)
+FROM core.zd_tickets;
+
+-- CHECK 3: Verificar se STG tem dados mais recentes que CORE
+-- ----------------------------------------------------------
+SELECT 
+    'Pipedrive' as source,
+    MAX(loaded_at) as stg_max_loaded,
+    (SELECT MAX(_loaded_at) FROM core.pd_deals) as core_max_loaded
+FROM stg_pipedrive.deals_raw
+UNION ALL
+SELECT 
+    'Zendesk',
+    MAX(loaded_at),
+    (SELECT MAX(_loaded_at) FROM core.zd_tickets)
+FROM stg_zendesk.tickets_raw;
+
+-- CHECK 4: Contagem de registros por scope (Pipedrive)
+-- ----------------------------------------------------
+SELECT scope, COUNT(*) as deals_count
+FROM core.pd_deals
+GROUP BY scope
+ORDER BY scope;
+
+-- CHECK 5: Verificar NULLs em campos obrigatórios
+-- -----------------------------------------------
+SELECT 'Deals sem deal_id' as issue, COUNT(*) as count
+FROM core.pd_deals WHERE deal_id IS NULL
+UNION ALL
+SELECT 'Tickets sem ticket_id', COUNT(*)
+FROM core.zd_tickets WHERE ticket_id IS NULL
+UNION ALL
+SELECT 'Deals sem status', COUNT(*)
+FROM core.pd_deals WHERE status IS NULL;
+
+-- CHECK 6: Distribuição de status (sanity check)
+-- ----------------------------------------------
+SELECT 'Pipedrive' as source, status, COUNT(*) as count
+FROM core.pd_deals
+GROUP BY status
+UNION ALL
+SELECT 'Zendesk', status, COUNT(*)
+FROM core.zd_tickets
+GROUP BY status
+ORDER BY source, count DESC;
+
+-- CHECK 7: Verificar integridade referencial (FKs lógicas)
+-- --------------------------------------------------------
+-- Deals com person_id que não existe em persons
+SELECT 'Orphan deals (person)' as issue, COUNT(*) as count
+FROM core.pd_deals d
+WHERE d.person_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM core.pd_persons p WHERE p.person_id = d.person_id AND p.scope = d.scope);
+
+-- Tickets com requester_id que não existe em users
+SELECT 'Orphan tickets (requester)' as issue, COUNT(*) as count
+FROM core.zd_tickets t
+WHERE t.requester_id IS NOT NULL
+  AND NOT EXISTS (SELECT 1 FROM core.zd_users u WHERE u.user_id = t.requester_id);
+
+
+# ============================================================================
+# 5. CONFIGURAÇÃO DO TASK SCHEDULER (WINDOWS)
+# ============================================================================
+
+# OPÇÃO A: Script PowerShell automatizado
+# ----------------------------------------
+# Salve como: C:\skyfit-datalake\scripts\daily_pipeline.ps1
+
+$ErrorActionPreference = "Stop"
+$ProjectRoot = "C:\skyfit-datalake"
+$LogFile = "$ProjectRoot\logs\daily_pipeline_$(Get-Date -Format 'yyyyMMdd').log"
+
+function Log($msg) {
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    "$timestamp | $msg" | Tee-Object -Append -FilePath $LogFile
+}
+
+try {
+    Set-Location $ProjectRoot
+    & "$ProjectRoot\.venv\Scripts\Activate.ps1"
+    
+    Log "=== INICIANDO PIPELINE DIÁRIO ==="
+    
+    # BRONZE
+    Log ">>> Executando Pipedrive Bronze..."
+    python src/extractors/pipedrive_bronze.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Pipedrive Bronze falhou" }
+    
+    Log ">>> Executando Zendesk Bronze..."
+    python src/extractors/zendesk_bronze.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Zendesk Bronze falhou" }
+    
+    # SILVER
+    Log ">>> Executando Pipedrive STG..."
+    python src/loaders/load_pipedrive_stg.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Pipedrive STG falhou" }
+    
+    Log ">>> Executando Zendesk STG..."
+    python src/loaders/load_zendesk_stg.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Zendesk STG falhou" }
+    
+    # GOLD
+    Log ">>> Executando Pipedrive CORE..."
+    python src/transformers/normalize_pipedrive.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Pipedrive CORE falhou" }
+    
+    Log ">>> Executando Zendesk CORE..."
+    python src/transformers/normalize_zendesk.py 2>&1 | Tee-Object -Append -FilePath $LogFile
+    if ($LASTEXITCODE -ne 0) { throw "Zendesk CORE falhou" }
+    
+    Log "=== PIPELINE COMPLETO COM SUCESSO ==="
+    
+} catch {
+    Log "!!! ERRO: $_"
+    exit 1
+}
+
+# CRIAR TAREFA NO TASK SCHEDULER:
+# --------------------------------
+# 1. Abra Task Scheduler (taskschd.msc)
+# 2. Create Task...
+#    - Name: "SkyFit Daily Pipeline"
+#    - Run whether user is logged on or not
+#    - Run with highest privileges
+# 3. Triggers:
+#    - Daily at 02:00 AM
+# 4. Actions:
+#    - Program: powershell.exe
+#    - Arguments: -ExecutionPolicy Bypass -File "C:\skyfit-datalake\scripts\daily_pipeline.ps1"
+# 5. Conditions:
+#    - Start only if network connection is available
+# 6. Settings:
+#    - Allow task to be run on demand
+#    - If task fails, restart every 30 minutes, up to 3 times
+
+
+# ============================================================================
+# 6. SCRIPT DE HEALTH CHECK RÁPIDO
+# ============================================================================
+
+# Salve como: C:\skyfit-datalake\scripts\health_check.ps1
+
+$ProjectRoot = "C:\skyfit-datalake"
+Set-Location $ProjectRoot
+& "$ProjectRoot\.venv\Scripts\Activate.ps1"
+
+Write-Host "=== HEALTH CHECK ===" -ForegroundColor Cyan
+
+# Contagem de registros
+$query = @"
+SELECT 
+    'pd_deals' as table_name, COUNT(*) as count FROM core.pd_deals
+UNION ALL SELECT 'pd_persons', COUNT(*) FROM core.pd_persons
+UNION ALL SELECT 'pd_activities', COUNT(*) FROM core.pd_activities
+UNION ALL SELECT 'zd_tickets', COUNT(*) FROM core.zd_tickets
+UNION ALL SELECT 'zd_users', COUNT(*) FROM core.zd_users
+ORDER BY table_name;
+"@
+
+python -c "
+import psycopg2
+import sys
+sys.path.insert(0, '.')
+from config.settings import postgres
+
+conn = psycopg2.connect(
+    host=postgres.HOST, port=postgres.PORT, dbname=postgres.DATABASE,
+    user=postgres.USER, password=postgres.PASSWORD, sslmode=postgres.SSLMODE
+)
+cur = conn.cursor()
+cur.execute('''$query''')
+print('Tabela'.ljust(20), 'Registros')
+print('-' * 35)
+for row in cur.fetchall():
+    print(str(row[0]).ljust(20), row[1])
+conn.close()
+"
+
+Write-Host "`n=== FIM HEALTH CHECK ===" -ForegroundColor Cyan
+
+
+# ============================================================================
+# 7. RESUMO DE COMANDOS
+# ============================================================================
+
+# EXECUÇÃO MANUAL COMPLETA:
+cd C:\skyfit-datalake
+.\.venv\Scripts\Activate.ps1
+
+# Bronze
+python src/extractors/pipedrive_bronze.py
+python src/extractors/zendesk_bronze.py
+
+# Silver
+python src/loaders/load_pipedrive_stg.py
+python src/loaders/load_zendesk_stg.py
+
+# Gold
+python src/transformers/normalize_pipedrive.py
+python src/transformers/normalize_zendesk.py
+
+# Health Check
+.\scripts\health_check.ps1
+
+
+# ============================================================================
+# 8. TROUBLESHOOTING COMUM
+# ============================================================================
+
+# ERRO: "no results to fetch"
+# CAUSA: Cursor conflito SELECT/INSERT
+# SOLUÇÃO: Use os arquivos corrigidos (normalize_*.py v2)
+
+# ERRO: "can't adapt type 'dict'"  
+# CAUSA: Dict passado sem json.dumps()
+# SOLUÇÃO: Use os arquivos corrigidos (normalize_*.py v2)
+
+# ERRO: Rate limit 429
+# CAUSA: Muitas requisições
+# SOLUÇÃO: APIs já têm retry automático com backoff
+
+# ERRO: SSL certificate
+# CAUSA: Certificado Azure
+# SOLUÇÃO: Verifique PG_SSLMODE=require no .env
+
+# ERRO: Connection timeout
+# CAUSA: Firewall ou VPN
+# SOLUÇÃO: Test-NetConnection skyfitdbevo.postgres.database.azure.com -Port 5432

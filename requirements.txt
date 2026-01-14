@@ -1,0 +1,16 @@
+# Core
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Database
+psycopg2-binary>=2.9.9
+
+# Azure
+azure-storage-file-datalake>=12.14.0
+azure-identity>=1.15.0
+
+# Data Processing
+pandas>=2.0.0
+
+# Utilities
+python-dateutil>=2.8.2
